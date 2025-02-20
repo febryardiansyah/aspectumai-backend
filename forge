@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+/* eslint-disable */
+const fs = require("fs");
+const { Command } = require("commander");
+const { execSync } = require("child_process");
+const { join } = require("path");
+const { createInterface } = require("readline");
+require("dotenv").config();
+
+const program = new Command();
+
+program.version("1.0.0").description("FORGE - Node.js CLI Tool");
+
+program
+  .command("dev")
+  .description("Run development server")
+  .action(() => {
+    execSync("npx nodemon", { stdio: "inherit" });
+  });
+
+program
+  .command("build")
+  .description("Build the project")
+  .action(() => {
+    execSync("npx tsc", { stdio: "inherit" });
+  });
+
+program
+  .command("start")
+  .description("Start the application")
+  .action(() => {
+    execSync("npx ts-node dist/app.js", { stdio: "inherit" });
+  });
+
+program
+  .command("lint")
+  .description("Run ESLint")
+  .action(() => {
+    execSync("npx eslint --ext .ts .", { stdio: "inherit" });
+  });
+
+program
+  .command("entity:create <name>")
+  .description("Create a new entity")
+  .option("-m, --migration", "Create a migration file for the new entity")
+  .action((name, cmd) => {
+    const filename = `${name}.entity`
+    const fullPath = join("src/database/entities", filename);
+
+    execSync(
+      `npx ts-node ./node_modules/typeorm/cli.js entity:create ${fullPath}`,
+      { stdio: "inherit" }
+    );
+      
+    const filePath = join("src", "database", "entities", `${filename}.ts`); // Adjust path as needed
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const updatedContent = fileContent.replace(
+      `export class ${name}.entity`,
+      `export default class ${name}Entity`
+    );
+
+    fs.writeFileSync(filePath, updatedContent, "utf-8")
+
+    if (cmd.migration) {
+      const migrationPath = join(
+        "src/database/migrations",
+        name.split("/").at(-1)
+      );
+
+      execSync(
+        `npx ts-node ./node_modules/typeorm/cli.js migration:create ${migrationPath}`,
+        { stdio: "inherit" }
+      );
+    }
+  });
+
+program
+  .command("migrate:create <name>")
+  .description("Create a new migration")
+  .action(name => {
+    const fullPath = join("src/database/migrations", name);
+    execSync(
+      `npx ts-node ./node_modules/typeorm/cli.js migration:create ${fullPath}`,
+      { stdio: "inherit" }
+    );
+  });
+
+program
+  .command("migrate:run")
+  .description("Run migrations")
+  .action(() => {
+    execSync(
+      "npx ts-node ./node_modules/typeorm/cli.js migration:run -d ./src/config/datasource.ts",
+      { stdio: "inherit" }
+    );
+  });
+
+const confirmAction = (message, action) => {
+  if (
+    process.env.NODE_ENV === "production"
+  ) {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question(message, answer => {
+      if (answer.toLowerCase() === "yes" || answer.toLowerCase() === "y") {
+        action();
+      } else {
+        console.log("Action cancelled.");
+      }
+      rl.close();
+    });
+  } else {
+    action();
+  }
+};
+
+program
+  .command("migrate:revert")
+  .description("Revert migrations")
+  .action(() => {
+    confirmAction(
+      "You are in a production environment. Are you sure you want to revert migrations? (yes/no) ",
+      () => {
+        execSync(
+          "npx ts-node ./node_modules/typeorm/cli.js migration:revert -d ./src/config/datasource.ts",
+          { stdio: "inherit" }
+        );
+      }
+    );
+  });
+
+program
+  .command("migrate:fresh")
+  .description("Drop all tables and re-run migrations")
+  .action(() => {
+    confirmAction(
+      "You are in a production environment. Are you sure you want to drop all tables and re-run migrations? (yes/no) ",
+      () => {
+        execSync(
+          "npx ts-node ./node_modules/typeorm/cli.js schema:drop -d ./src/config/datasource.ts && npx ts-node ./node_modules/typeorm/cli.js migration:run -d ./src/config/datasource.ts",
+          { stdio: "inherit" }
+        );
+      }
+    );
+  });
+
+program
+  .command("seed")
+  .description("Seed the database")
+  .option("--file <file>", "Specify seed file")
+  .action(cmd => {
+    const file = cmd.file || "";
+    confirmAction(
+      "You are in a production environment. Are you sure you want to seed the database? (yes/no) ",
+      () => {
+        execSync(`npx ts-node ./src/config/seed.ts --file=${file}`, {
+          stdio: "inherit",
+        });
+      }
+    );
+  });
+
+program.parse(process.argv);

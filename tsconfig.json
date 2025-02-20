@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "lib": ["es5", "es6", "DOM"],
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["express"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "strict": false,
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["src/config/*"],
+      "@entities/*": ["src/database/entities/*"],
+      "@database/*": ["src/database/*"],
+      "@utilities/*": ["src/utilities/*"],
+      "@global/*": ["src/global/*"],
+      "@app-types/*": ["src/types/*"],
+      "@vendor/*": ["src/vendor/*"],
+      "@services/*": ["src/services/*"],
+      "@models/*": ["src/database/models/*"],
+      "@tests/*": ["src/tests/*"],
+      "@mocks/*": ["src/tests/__mocks__/*"],
+      "@app/*": ["src/app/*"],
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}
