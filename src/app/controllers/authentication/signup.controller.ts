@@ -25,11 +25,27 @@ export default class AuthSignupController {
     }
   };
 
-  signup = async (_req: Request, res: Response, next: NextFunction) => {
+  signup = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { first_name, last_name, username, email, password } = req.body;
+
+      await this.service.signup(
+        first_name,
+        last_name,
+        username,
+        email,
+        password
+      );
+
       return HttpResponse.success(res, "Sign Up Successfully!", null);
     } catch (err) {
-      next(new ErrorHandler(err.message, err.data, err.status));
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
     }
   };
 

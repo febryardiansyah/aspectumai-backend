@@ -2,7 +2,10 @@ import { Router } from "express";
 
 import AuthSignupController from "@app/controllers/authentication/signup.controller";
 import { ValidationMiddleware } from "@global/middleware/validation.middleware";
-import { AuthSignupEmailVerification } from "@app/validators/authentication.validator";
+import {
+  AuthSignupEmailVerification,
+  AuthSignupVerification,
+} from "@app/validators/authentication.validator";
 
 export default class AuthRouter {
   public router: Router;
@@ -24,7 +27,11 @@ export default class AuthRouter {
     );
 
     // this.router.post("/sign-up/confirm-otp", this.signupController.signup);
-    // this.router.post("/sign-up", this.signupController.signup);
+    this.router.post(
+      "/sign-up",
+      ValidationMiddleware.validateBody(AuthSignupVerification),
+      this.signupController.signup
+    );
 
     // this.router.post("/sign-in", this.signupController.signin);
 

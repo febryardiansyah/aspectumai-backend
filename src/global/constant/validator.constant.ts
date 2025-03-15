@@ -12,4 +12,6 @@ export class ValidationErrorMessages {
   static FILE_TOO_LARGE(limitSize: number): string {
     return `The file is too large. Please upload a file smaller than ${limitSize}MB.`;
   }
+  static readonly MIN_LENGTH = (length: number) =>
+    `The $property must be at least ${length} characters long`;
 }
