@@ -3,6 +3,7 @@ import { Router } from "express";
 import AuthController from "@app/controllers/authentication/auth.controller";
 import { ValidationMiddleware } from "@global/middleware/validation.middleware";
 import {
+  AuthResetPasswordVerification,
   AuthSigninVerification,
   AuthSignupEmailVerification,
   AuthSignupVerification,
@@ -28,7 +29,6 @@ export default class AuthRouter {
       this.authController.emailVerification
     );
 
-    // this.router.post("/sign-up/confirm-otp", this.signupController.signup);
     this.router.post(
       "/sign-up",
       ValidationMiddleware.validateBody(AuthSignupVerification),
@@ -47,14 +47,10 @@ export default class AuthRouter {
       this.authController.verifyOTP
     );
 
-    // this.router.post(
-    //   "/reset-password/email-verification",
-    //   this.signupController.signup
-    // );
-    // this.router.post(
-    //   "/reset-password/confirm-otp",
-    //   this.signupController.signup
-    // );
-    // this.router.post("/reset-password", this.signupController.signup);
+    this.router.post(
+      "/reset-password",
+      ValidationMiddleware.validateBody(AuthResetPasswordVerification),
+      this.authController.resetPassword
+    );
   }
 }

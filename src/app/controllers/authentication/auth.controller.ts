@@ -15,13 +15,22 @@ export default class AuthController {
     next: NextFunction
   ) => {
     try {
-      const { email } = req.body;
+      const { email, type } = req.body;
+      if (type !== "SIGNUP" && type !== "RESET_PASSWORD") {
+        throw new ErrorHandler("Invalid Type", null, 400);
+      }
 
-      await this.service.verifyEmail(email);
+      await this.service.verifyEmail(email, type);
 
       return HttpResponse.success(res, "OTP Sent Successfully!", null);
     } catch (err) {
-      next(new ErrorHandler(err.message, err.data, err.status));
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
     }
   };
 
@@ -31,13 +40,17 @@ export default class AuthController {
 
       await this.service.signup(
         name,
-        
+
         username,
         email,
         password
       );
 
-      return HttpResponse.success(res, "Sign Up Successfully! Check your email", null);
+      return HttpResponse.success(
+        res,
+        "Sign Up Successfully! Check your email",
+        null
+      );
     } catch (err) {
       next(
         new ErrorHandler(
@@ -90,5 +103,23 @@ export default class AuthController {
         )
       );
     }
-  }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, otp, password } = req.body;
+
+      await this.service.resetPassword(email, otp, password);
+
+      return HttpResponse.success(res, "Password Reset Successfully!", null);
+    } catch (err) {
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
+    }
+  };
 }

@@ -37,4 +37,12 @@ export default class AuthRepository extends Repository<UserEntity> {
   ): Promise<void> {
     await manager.update(UserEntity, { email }, { isEmailVerified: true });
   }
+
+  async resetPassword(
+    manager: EntityManager,
+    email: string,
+    password: string
+  ): Promise<void> {
+    await manager.update(UserEntity, { email }, { password });
+  }
 }
