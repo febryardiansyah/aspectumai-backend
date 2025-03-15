@@ -26,20 +26,9 @@ export class AuthSignupEmailVerification {
 
 export class AuthSignupVerification {
   @IsNotEmpty({
-    message: ValidationUtils.error(
-      "First name",
-      ValidationErrorMessages.REQUIRED
-    ),
+    message: ValidationUtils.error("Name", ValidationErrorMessages.REQUIRED),
   })
-  first_name: string;
-
-  @IsNotEmpty({
-    message: ValidationUtils.error(
-      "Last name",
-      ValidationErrorMessages.REQUIRED
-    ),
-  })
-  last_name: string;
+  name: string;
 
   @IsNotEmpty({
     message: ValidationUtils.error(

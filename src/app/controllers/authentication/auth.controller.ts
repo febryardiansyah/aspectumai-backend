@@ -27,11 +27,11 @@ export default class AuthController {
 
   signup = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { first_name, last_name, username, email, password } = req.body;
+      const { name, username, email, password } = req.body;
 
       await this.service.signup(
-        first_name,
-        last_name,
+        name,
+        
         username,
         email,
         password

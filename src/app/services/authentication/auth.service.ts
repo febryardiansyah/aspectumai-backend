@@ -108,8 +108,7 @@ export default class AuthService {
 
   // signup is a method that creates a new user.
   async signup(
-    first_name: string,
-    last_name: string,
+    name: string,
     username: string,
     email: string,
     password: string
@@ -136,8 +135,7 @@ export default class AuthService {
         const user = new UserEntity();
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        user.first_name = first_name;
-        user.last_name = last_name;
+        user.name = name;
         user.username = username;
         user.email = email;
         user.password = hashedPassword;
