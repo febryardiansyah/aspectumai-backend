@@ -10,14 +10,14 @@ import UserEmailVerificationRepository from "@app/repositories/user-email-verifi
 import AppDataSource from "@config/datasource";
 import UserEmailVerificationEntity from "@entities/UserEmailVerification.entity";
 import UserEntity from "@entities/User.entity";
-import SignUpRepository from "@app/repositories/auth.repo";
+import AuthRepository from "@app/repositories/auth.repo";
 import { JWT_SECRET } from "@global/constant/database.constant";
 
 export default class AuthService {
   constructor(
     private readonly dataSource: DataSource = AppDataSource,
     private readonly userEmailVerificationRepo: UserEmailVerificationRepository = new UserEmailVerificationRepository(),
-    private readonly signUpRepository: SignUpRepository = new SignUpRepository()
+    private readonly authRepository: AuthRepository = new AuthRepository()
   ) {}
 
   // verifyEmail is a method that sends an OTP to the user's email.
@@ -120,13 +120,13 @@ export default class AuthService {
 
     try {
       await this.dataSource.manager.transaction(async manager => {
-        const userByEmail = await this.signUpRepository.findByEmail(
+        const userByEmail = await this.authRepository.findByEmail(
           manager,
           email
         );
         if (userByEmail) throw "User already exist!";
 
-        const userByUsername = await this.signUpRepository.findByUsername(
+        const userByUsername = await this.authRepository.findByUsername(
           manager,
           username
         );
@@ -140,7 +140,9 @@ export default class AuthService {
         user.email = email;
         user.password = hashedPassword;
 
-        await this.signUpRepository.createUser(manager, user);
+        await this.authRepository.createUser(manager, user);
+
+        await this.verifyEmail(email);
       });
 
       await queryRunner.commitTransaction();
@@ -161,13 +163,15 @@ export default class AuthService {
 
     try {
       const user = await this.dataSource.manager.transaction(async manager => {
-        const user = await this.signUpRepository.findByEmail(manager, email);
+        const user = await this.authRepository.findByEmail(manager, email);
 
         if (!user) throw "User not found!";
 
         const isPasswordMatch = await bcrypt.compare(password, user.password);
 
         if (!isPasswordMatch) throw "Invalid password!";
+
+        if (!user.isEmailVerified) throw "Email is not verified!";
 
         return user;
       });
@@ -188,5 +192,40 @@ export default class AuthService {
     const token = jwt.sign({ email: email }, JWT_SECRET);
 
     return token;
+  }
+
+  async verifyOTP(email: string, otp: string): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.dataSource.manager.transaction(async manager => {
+        const user = await this.authRepository.findByEmail(manager, email);
+        if (user.isEmailVerified) throw "Email is already verified!";
+
+        const verificationExist =
+          await this.userEmailVerificationRepo.findByEmailAndType(
+            manager,
+            email,
+            "SIGNUP"
+          );
+
+        if (!verificationExist) throw "OTP not found!";
+
+        if (verificationExist.otp !== otp) throw "Invalid OTP!";
+
+        await this.authRepository.updateUserVerification(manager, email);
+      });
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

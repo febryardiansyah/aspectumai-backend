@@ -66,3 +66,54 @@ export class AuthSignupVerification {
   })
   password: string;
 }
+
+export class AuthSigninVerification {
+  @IsNotEmpty({
+    message: ValidationUtils.error("Email", ValidationErrorMessages.REQUIRED),
+  })
+  @IsEmail(
+    {},
+    {
+      message: ValidationUtils.error(
+        "Email",
+        ValidationErrorMessages.INVALID_EMAIL
+      ),
+    }
+  )
+  email: string;
+
+  @IsNotEmpty({
+    message: ValidationUtils.error(
+      "Password",
+      ValidationErrorMessages.REQUIRED
+    ),
+  })
+  @MinLength(6, {
+    message: ValidationUtils.error(
+      "Password",
+      ValidationErrorMessages.MIN_LENGTH(6)
+    ),
+  })
+  password: string;
+}
+
+export class AuthVerifyOTPVerification {
+  @IsNotEmpty({
+    message: ValidationUtils.error("Email", ValidationErrorMessages.REQUIRED),
+  })
+  @IsEmail(
+    {},
+    {
+      message: ValidationUtils.error(
+        "Email",
+        ValidationErrorMessages.INVALID_EMAIL
+      ),
+    }
+  )
+  email: string;
+
+  @IsNotEmpty({
+    message: ValidationUtils.error("OTP", ValidationErrorMessages.REQUIRED),
+  })
+  otp: string;
+}

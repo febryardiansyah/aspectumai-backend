@@ -37,7 +37,7 @@ export default class AuthController {
         password
       );
 
-      return HttpResponse.success(res, "Sign Up Successfully!", null);
+      return HttpResponse.success(res, "Sign Up Successfully! Check your email", null);
     } catch (err) {
       next(
         new ErrorHandler(
@@ -73,4 +73,22 @@ export default class AuthController {
       );
     }
   };
+
+  verifyOTP = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, otp } = req.body;
+
+      await this.service.verifyOTP(email, otp);
+
+      return HttpResponse.success(res, "OTP Verified Successfully!", null);
+    } catch (err) {
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
+    }
+  }
 }
