@@ -1,12 +1,12 @@
-import AuthSignupService from "@app/services/authentication/signup.service";
+import AuthService from "@app/services/authentication/auth.service";
 import { ErrorHandler, HttpResponse } from "@config/http";
 import { NextFunction, Request, Response } from "express";
 
-export default class AuthSignupController {
-  private service: AuthSignupService;
+export default class AuthController {
+  private service: AuthService;
 
   constructor() {
-    this.service = new AuthSignupService();
+    this.service = new AuthService();
   }
 
   emailVerification = async (
@@ -49,11 +49,28 @@ export default class AuthSignupController {
     }
   };
 
-  signin = async (_req: Request, res: Response, next: NextFunction) => {
+  signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      return HttpResponse.success(res, "Sign In Successfully!", null);
+      const { email, password } = req.body;
+
+      const user = await this.service.signin(email, password);
+
+      const token = await this.service.generateToken(email);
+
+      user.password = undefined;
+
+      return HttpResponse.success(res, "Sign In Successfully!", {
+        token,
+        ...user,
+      });
     } catch (err) {
-      next(new ErrorHandler(err.message, err.data, err.status));
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
     }
   };
 }

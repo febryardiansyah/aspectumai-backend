@@ -1,6 +1,7 @@
 import { DataSource } from "typeorm";
 import moment from "moment";
 import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
 
 import { GLOBAL_OTP_CONFIG } from "@global/config/otp";
 import { GeneratorUtils } from "@utilities/generate";
@@ -9,15 +10,17 @@ import UserEmailVerificationRepository from "@app/repositories/user-email-verifi
 import AppDataSource from "@config/datasource";
 import UserEmailVerificationEntity from "@entities/UserEmailVerification.entity";
 import UserEntity from "@entities/User.entity";
-import SignUpRepository from "@app/repositories/signup.repo";
+import SignUpRepository from "@app/repositories/auth.repo";
+import { JWT_SECRET } from "@global/constant/database.constant";
 
-export default class AuthSignupService {
+export default class AuthService {
   constructor(
     private readonly dataSource: DataSource = AppDataSource,
     private readonly userEmailVerificationRepo: UserEmailVerificationRepository = new UserEmailVerificationRepository(),
     private readonly signUpRepository: SignUpRepository = new SignUpRepository()
   ) {}
 
+  // verifyEmail is a method that sends an OTP to the user's email.
   async verifyEmail(email: string): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -103,6 +106,7 @@ export default class AuthSignupService {
     }
   }
 
+  // signup is a method that creates a new user.
   async signup(
     first_name: string,
     last_name: string,
@@ -149,5 +153,42 @@ export default class AuthSignupService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async signin(email: string, password: string): Promise<UserEntity> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await this.dataSource.manager.transaction(async manager => {
+        const user = await this.signUpRepository.findByEmail(manager, email);
+
+        if (!user) throw "User not found!";
+
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordMatch) throw "Invalid password!";
+
+        return user;
+      });
+
+      await queryRunner.commitTransaction();
+
+      return user;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  generateToken(email: string) {
+    const token = jwt.sign({ email: email }, JWT_SECRET);
+
+    return token;
   }
 }

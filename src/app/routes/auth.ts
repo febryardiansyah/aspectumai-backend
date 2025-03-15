@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import AuthSignupController from "@app/controllers/authentication/signup.controller";
+import AuthController from "@app/controllers/authentication/auth.controller";
 import { ValidationMiddleware } from "@global/middleware/validation.middleware";
 import {
   AuthSignupEmailVerification,
@@ -10,11 +10,11 @@ import {
 export default class AuthRouter {
   public router: Router;
 
-  private signupController: AuthSignupController;
+  private authController: AuthController;
 
   constructor() {
     this.router = Router();
-    this.signupController = new AuthSignupController();
+    this.authController = new AuthController();
 
     this.initialize();
   }
@@ -23,17 +23,17 @@ export default class AuthRouter {
     this.router.post(
       "/sign-up/email-verification",
       ValidationMiddleware.validateBody(AuthSignupEmailVerification),
-      this.signupController.emailVerification
+      this.authController.emailVerification
     );
 
     // this.router.post("/sign-up/confirm-otp", this.signupController.signup);
     this.router.post(
       "/sign-up",
       ValidationMiddleware.validateBody(AuthSignupVerification),
-      this.signupController.signup
+      this.authController.signup
     );
 
-    // this.router.post("/sign-in", this.signupController.signin);
+    this.router.post("/sign-in", this.authController.signin);
 
     // this.router.post(
     //   "/reset-password/email-verification",
