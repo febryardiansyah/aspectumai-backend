@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 
-import AuthController from "../controllers/authentication/signup.controller";
+import AuthController from "../controllers/authentication/auth.controller";
 import AuthRouter from "./auth";
 
 export default class AppRouter {

@@ -1,17 +1,23 @@
 import { Router } from "express";
 
-import AuthSignupController from "@app/controllers/authentication/signup.controller";
+import AuthController from "@app/controllers/authentication/auth.controller";
 import { ValidationMiddleware } from "@global/middleware/validation.middleware";
-import { AuthSignupEmailVerification } from "@app/validators/authentication.validator";
+import {
+  AuthResetPasswordVerification,
+  AuthSigninVerification,
+  AuthSignupEmailVerification,
+  AuthSignupVerification,
+  AuthVerifyOTPVerification,
+} from "@app/validators/authentication.validator";
 
 export default class AuthRouter {
   public router: Router;
 
-  private signupController: AuthSignupController;
+  private authController: AuthController;
 
   constructor() {
     this.router = Router();
-    this.signupController = new AuthSignupController();
+    this.authController = new AuthController();
 
     this.initialize();
   }
@@ -20,22 +26,31 @@ export default class AuthRouter {
     this.router.post(
       "/sign-up/email-verification",
       ValidationMiddleware.validateBody(AuthSignupEmailVerification),
-      this.signupController.emailVerification
+      this.authController.emailVerification
     );
 
-    // this.router.post("/sign-up/confirm-otp", this.signupController.signup);
-    // this.router.post("/sign-up", this.signupController.signup);
+    this.router.post(
+      "/sign-up",
+      ValidationMiddleware.validateBody(AuthSignupVerification),
+      this.authController.signup
+    );
 
-    // this.router.post("/sign-in", this.signupController.signin);
+    this.router.post(
+      "/sign-in",
+      ValidationMiddleware.validateBody(AuthSigninVerification),
+      this.authController.signin
+    );
 
-    // this.router.post(
-    //   "/reset-password/email-verification",
-    //   this.signupController.signup
-    // );
-    // this.router.post(
-    //   "/reset-password/confirm-otp",
-    //   this.signupController.signup
-    // );
-    // this.router.post("/reset-password", this.signupController.signup);
+    this.router.post(
+      "/verify-otp",
+      ValidationMiddleware.validateBody(AuthVerifyOTPVerification),
+      this.authController.verifyOTP
+    );
+
+    this.router.post(
+      "/reset-password",
+      ValidationMiddleware.validateBody(AuthResetPasswordVerification),
+      this.authController.resetPassword
+    );
   }
 }

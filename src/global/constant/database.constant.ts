@@ -15,3 +15,5 @@ export const DEFAULT_TABLE_COLUMNS = [
     isNullable: true,
   },
 ];
+
+export const JWT_SECRET = process.env.JWT_SECRET

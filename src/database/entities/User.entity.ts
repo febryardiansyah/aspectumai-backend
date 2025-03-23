@@ -7,13 +7,7 @@ export default class UserEntity extends BaseEntity {
     type: "varchar",
     length: 64,
   })
-  first_name: string;
-
-  @Column({
-    type: "varchar",
-    length: 64,
-  })
-  last_name: string;
+  name: string;
 
   @Column({
     type: "varchar",
@@ -33,4 +27,10 @@ export default class UserEntity extends BaseEntity {
     type: "text",
   })
   password: string;
+
+  @Column({
+    type: "boolean",
+    default: false,
+  })
+  isEmailVerified: boolean;
 }
