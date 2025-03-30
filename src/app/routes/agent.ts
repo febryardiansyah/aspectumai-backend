@@ -14,8 +14,12 @@ export default class AgentRouter {
 
   private initialize(): void {
     this.router.get("/all", this.agentController.getAgents);
+    this.router.get("/detail/:id", this.agentController.getAgentById);
+    this.router.post("/create", this.agentController.createAgent);
 
     this.router.post("/category/create", this.agentController.createCategory);
     this.router.get("/category/all", this.agentController.getCategories);
+
+    this.router.post("/ai-model/create", this.agentController.createAIModel);
   }
 }

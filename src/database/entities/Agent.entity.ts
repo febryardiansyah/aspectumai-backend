@@ -1,17 +1,11 @@
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-} from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 import AIModelEntity from "./AIModel.entity";
 import CategoryEntity from "./Category.entity";
 import BaseEntity from "./Base.entity";
 
 @Entity("agents")
 export default class AgentEntity extends BaseEntity {
-  @Column({ type: "varchar", length: 255 })
+  @Column({ type: "varchar", length: 255})
   name: string;
 
   @Column({ type: "text" })
@@ -36,7 +30,17 @@ export default class AgentEntity extends BaseEntity {
   aiModel: AIModelEntity;
 
   @ManyToMany(() => CategoryEntity)
-  @JoinTable()
+  @JoinTable({
+    name: "agent_categories",
+    joinColumn: {
+      name: "agentId",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "categoryId",
+      referencedColumnName: "id",
+    },
+  })
   categories: CategoryEntity[];
 
   @Column({ type: "text" })

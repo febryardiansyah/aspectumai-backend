@@ -90,7 +90,7 @@ export class Agents1742724315000 implements MigrationInterface {
         length: "64",
       },
       {
-        name: "api_url",
+        name: "apiUrl",
         type: "varchar",
         length: "64",
       },
@@ -119,7 +119,7 @@ export class Agents1742724315000 implements MigrationInterface {
     ],
   });
 
-  private junkCategoryWithAgentTable = new Table({
+  private junkAgentCategory = new Table({
     name: "agent_categories",
     columns: [
       {
@@ -139,7 +139,7 @@ export class Agents1742724315000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(this.aiModelTable, true);
     await queryRunner.createTable(this.categoryTable, true);
-    await queryRunner.createTable(this.junkCategoryWithAgentTable, true);
+    await queryRunner.createTable(this.junkAgentCategory, true);
     await queryRunner.createTable(this.agentTable, true);
 
     await queryRunner.createForeignKey(
@@ -171,7 +171,7 @@ export class Agents1742724315000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable(this.junkCategoryWithAgentTable, true);
+    await queryRunner.dropTable(this.junkAgentCategory, true);
     await queryRunner.dropTable(this.categoryTable, true);
     await queryRunner.dropTable(this.aiModelTable, true);
     await queryRunner.dropTable(this.agentTable, true);
