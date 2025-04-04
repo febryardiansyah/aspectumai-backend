@@ -1,9 +1,9 @@
-type PaginationData<T> = {
+export type PaginationData<T> = {
   total: number;
   results: T[];
 };
 
-type PaginationResult<T> = {
+export type PaginationResult<T> = {
   current_page: number;
   total_page: number;
   total_records: number;
