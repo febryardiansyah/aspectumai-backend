@@ -54,7 +54,8 @@ export default class AgentService {
   async getAgents(
     keywords: string,
     limit: number,
-    page: number
+    page: number,
+    categoryids: number[],
   ): Promise<PaginationResult<AgentEntity>> {
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -67,9 +68,10 @@ export default class AgentService {
             manager,
             keywords,
             limit,
-            page
+            page,
+            categoryids
           );
-          
+
           return {
             total_records: agents[1],
             records: agents[0],

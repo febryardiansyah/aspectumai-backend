@@ -68,19 +68,21 @@ export default class AgentController {
   };
 
   getAgents = async (req: Request, res: Response, next: NextFunction) => {
-    const { keywords, limit, page } = req.query;
+    const { keywords, limit, page, categoryIds } = req.query;
     const _page = Number(page) || 1;
     const _limit = Number(limit) || 10;
-    // const offset = (_page - 1) * _limit;
     const _keywords = (keywords as string)?.trim();
+    const _categoryIds = categoryIds
+      ? (categoryIds as string).split(",").map((id: string) => Number(id))
+      : undefined;
 
     try {
-      const agents = await this.service.getAgents(_keywords, _limit, _page);
-      // const data = PaginationUtils.pagination(
-      //   agents,
-      //   _page,
-      //   _limit
-      // );
+      const agents = await this.service.getAgents(
+        _keywords,
+        _limit,
+        _page,
+        _categoryIds
+      );
 
       return HttpResponse.success(res, "Agents fetched successfully", agents);
     } catch (err) {

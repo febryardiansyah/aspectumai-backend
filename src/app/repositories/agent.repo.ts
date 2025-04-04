@@ -2,7 +2,14 @@ import Database from "@config/database";
 import AgentEntity from "@entities/Agent.entity";
 import AIModelEntity from "@entities/AIModel.entity";
 import CategoryEntity from "@entities/Category.entity";
-import { EntityManager, Repository, In, ILike, Like } from "typeorm";
+import PaginationUtils from "@utilities/pagination";
+import {
+  EntityManager,
+  Repository,
+  In,
+  ILike,
+  FindOptionsWhere,
+} from "typeorm";
 
 export default class AgentRepo extends Repository<AgentEntity> {
   constructor(manager?: EntityManager) {
@@ -23,15 +30,18 @@ export default class AgentRepo extends Repository<AgentEntity> {
     manager: EntityManager,
     keywords: string,
     limit: number,
-    page: number
+    page: number,
+    categoryids: number[]
   ) {
-    // const agent = await manager
-    //   .createQueryBuilder(AgentEntity, "agent")
-    //   .leftJoinAndSelect("agent.categories", "category")
-    //   .where("agent.name ILIKE :keyword", { keyword: `%${keywords}%` })
-    //   .orWhere("agent.description ILIKE :keyword", { keyword: `%${keywords}%` })
-    //   .orWhere("category.name ILIKE :keyword", { keyword: `%${keywords}%` })
-    //   .getMany();
+    const where: FindOptionsWhere<AgentEntity> = {};
+    if (keywords) {
+      where.name = ILike(`%${keywords}%`);
+    }
+    if (categoryids && categoryids.length > 0) {
+      where.categories = {
+        id: In(categoryids),
+      };
+    }
 
     return manager.findAndCount(AgentEntity, {
       relations: {
@@ -41,8 +51,9 @@ export default class AgentRepo extends Repository<AgentEntity> {
       order: {
         created_at: "DESC",
       },
-      skip: (page - 1) * limit,
+      skip: PaginationUtils.calculateOffset(limit, page),
       take: limit,
+      where: where,
     });
   }
 
