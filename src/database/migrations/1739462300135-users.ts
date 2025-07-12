@@ -15,12 +15,7 @@ export class Users1739462300135 implements MigrationInterface {
         generationStrategy: "increment",
       },
       {
-        name: "first_name",
-        type: "varchar",
-        length: "64",
-      },
-      {
-        name: "last_name",
+        name: "name",
         type: "varchar",
         length: "64",
       },
@@ -39,6 +34,11 @@ export class Users1739462300135 implements MigrationInterface {
       {
         name: "password",
         type: "text",
+      },
+      {
+        name: "isEmailVerified",
+        type: "boolean",
+        default: false,
       },
       ...DEFAULT_TABLE_COLUMNS,
     ],

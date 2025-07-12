@@ -18,7 +18,8 @@ const env = {
       PORT: Number(process.env.DB_PORT_TEST),
     },
   },
-  LOG_FILE: process.env.LOG_FILE
+  LOG_FILE: process.env.LOG_FILE,
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
 };
 
 export default env;

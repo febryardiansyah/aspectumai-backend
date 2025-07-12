@@ -11,7 +11,7 @@
     "cmd:sync": "ts-node -r tsconfig-paths/register ./cmd/sync/index.ts",
     "start:prod": "pm2 start 'npx ts-node dist/app.js'"
   },
-  "author": "Alfi Gufron",
+  "author": "AspectumAI",
   "license": "ISC",
   "description": "",
   "dependencies": {
