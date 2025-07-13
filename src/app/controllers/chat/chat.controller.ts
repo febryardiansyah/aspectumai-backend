@@ -68,12 +68,14 @@ export default class ChatController {
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { sessionId, messages, model } = req.body;
+      const user = req["user"] as UserEntity
+      ;
       const body: TSendChatBody = {
         sessionId,
         messages,
         model: model,
       };
-      const response = await this.service.sendMessage(req, res, body);
+      const response = await this.service.sendMessage(req, res, body, user.id);
 
       return HttpResponse.success(res, "Message sent successfully", response);
     } catch (err) {
@@ -104,6 +106,24 @@ export default class ChatController {
       );
     } catch (err) {
       console.error("Error in getSessionMessages:", err);
+      next(
+        new ErrorHandler(
+          typeof err === "object" ? err.message : err,
+          err.data,
+          err.status
+        )
+      );
+    }
+  };
+
+  removeSession = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.service.removeSessionById(Number(id));
+
+      return HttpResponse.success(res, "Chat session removed successfully");
+    } catch (err) {
+      console.error("Error in removeSession:", err);
       next(
         new ErrorHandler(
           typeof err === "object" ? err.message : err,

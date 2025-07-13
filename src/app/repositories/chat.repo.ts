@@ -13,21 +13,22 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
 
   async findSessionById(
     manager: EntityManager,
-    id: number
+    id: number,
   ): Promise<ChatSessionEntity | null> {
     return manager.findOne(ChatSessionEntity, {
       where: { id },
       relations: {
-        messages: true,
+        user: true,
       },
     });
   }
 
   async createSession(
-    manager: EntityManager,
-    session: ChatSessionEntity
+    session: ChatSessionEntity,
+    manager?: EntityManager
   ): Promise<ChatSessionEntity> {
-    return manager.save<ChatSessionEntity>(session);
+    const entityManager = manager || this.manager;
+    return entityManager.save<ChatSessionEntity>(session);
   }
 
   async updateSession(
@@ -44,23 +45,16 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
   }
 
   async getAllSessions(
-    manager: EntityManager,
-    userId: number
+    userId: number,
+    manager?: EntityManager
   ): Promise<ChatSessionEntity[]> {
-    return manager.find(ChatSessionEntity, {
+    const entityManager = manager || this.manager;
+    return entityManager.find(ChatSessionEntity, {
       where: { user: { id: userId } },
-      // relations: { messages: true, user: true },
       order: {
         created_at: "DESC",
       },
     });
-  }
-
-  async saveChat(
-    manager: EntityManager,
-    message: ChatMessageEntity
-  ): Promise<void> {
-    manager.save<ChatMessageEntity>(message);
   }
 
   async getSessionMessagesById(
@@ -73,5 +67,19 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
         created_at: "ASC",
       },
     });
+  }
+
+  async removeSessionById(manager: EntityManager, id: number): Promise<void> {
+    // First delete all messages for this session
+    await manager.delete(ChatMessageEntity, { chatSession: { id } });
+    // Then delete the session
+    await manager.delete(ChatSessionEntity, { id });
+  }
+
+  async saveChat(
+    manager: EntityManager,
+    message: ChatMessageEntity
+  ): Promise<ChatMessageEntity> {
+    return await manager.save<ChatMessageEntity>(message);
   }
 }

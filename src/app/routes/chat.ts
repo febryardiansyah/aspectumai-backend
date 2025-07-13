@@ -35,10 +35,17 @@ export default class ChatRouter {
       ValidationMiddleware.validateParamsId(ChatValidationParamsId),
       this.chatController.getSessionMessages
     );
+    this.router.delete(
+      "/session/:id",
+      AuthMiddleware.tokenRequired,
+      ValidationMiddleware.validateParamsId(ChatValidationParamsId),
+      this.chatController.removeSession
+    );
 
     /// chat
     this.router.post(
       "/message/send",
+      AuthMiddleware.tokenRequired,
       ValidationMiddleware.validateBody(SendChatValidation),
       this.chatController.sendMessage
     );

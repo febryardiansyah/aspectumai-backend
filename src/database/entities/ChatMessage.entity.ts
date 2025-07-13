@@ -9,6 +9,7 @@ export default class ChatMessageEntity extends BaseEntity {
 
   @ManyToOne(() => ChatSessionEntity, session => session.messages, {
     nullable: false,
+    onDelete: "CASCADE",
   })
   chatSession: ChatSessionEntity;
 
