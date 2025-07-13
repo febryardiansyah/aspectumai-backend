@@ -36,6 +36,29 @@ export default class ChatService {
     }
   }
 
+  async getChatSessions(userId: number): Promise<ChatSessionEntity[]> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const sessions = await this.dataSource.manager.transaction(
+        async manager => {
+          const sessions = await this.chatRepo.getAllSessions(manager, userId);
+          return sessions;
+        }
+      );
+
+      await queryRunner.commitTransaction();
+      return sessions;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async sendMessage(
     req: Request,
     res: Response,
@@ -149,6 +172,30 @@ export default class ChatService {
       // req.on("close", () => {
       //   stream.destroy();
       // });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getSessionMessages(
+    sessionId: number
+  ): Promise<ChatMessageEntity[]> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const messages = await this.dataSource.manager.transaction(
+        async manager => {
+          return this.chatRepo.getSessionMessagesById(manager, sessionId);
+        }
+      );
+
+      await queryRunner.commitTransaction();
+      return messages;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

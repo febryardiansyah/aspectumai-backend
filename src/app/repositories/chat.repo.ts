@@ -43,10 +43,35 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
     );
   }
 
+  async getAllSessions(
+    manager: EntityManager,
+    userId: number
+  ): Promise<ChatSessionEntity[]> {
+    return manager.find(ChatSessionEntity, {
+      where: { user: { id: userId } },
+      // relations: { messages: true, user: true },
+      order: {
+        created_at: "DESC",
+      },
+    });
+  }
+
   async saveChat(
     manager: EntityManager,
     message: ChatMessageEntity
   ): Promise<void> {
     manager.save<ChatMessageEntity>(message);
+  }
+
+  async getSessionMessagesById(
+    manager: EntityManager,
+    sessionId: number
+  ): Promise<ChatMessageEntity[]> {
+    return manager.find(ChatMessageEntity, {
+      where: { chatSession: { id: sessionId } },
+      order: {
+        created_at: "ASC",
+      },
+    });
   }
 }

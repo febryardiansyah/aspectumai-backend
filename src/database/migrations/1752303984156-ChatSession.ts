@@ -25,6 +25,11 @@ export class ChatSession1752303984156 implements MigrationInterface {
         length: "255",
         isNullable: false,
       },
+      {
+        name: "userId",
+        type: "bigint",
+        isNullable: false,
+      },
       ...DEFAULT_TABLE_COLUMNS,
     ],
   });
@@ -64,11 +69,20 @@ export class ChatSession1752303984156 implements MigrationInterface {
     await queryRunner.createTable(this.chatSessionTable, true);
     await queryRunner.createTable(this.chatMessageTable, true);
     await queryRunner.createForeignKey(
-      "chat_messages",
+      this.chatMessageTable,
       new TableForeignKey({
         columnNames: ["chatSessionId"],
         referencedColumnNames: ["id"],
         referencedTableName: "chat_sessions",
+      })
+    );
+
+    await queryRunner.createForeignKey(
+      this.chatSessionTable,
+      new TableForeignKey({
+        columnNames: ["userId"],
+        referencedColumnNames: ["id"],
+        referencedTableName: "users",
       })
     );
   }

@@ -1,5 +1,6 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 import BaseEntity from "./Base.entity";
+import ChatSessionEntity from "./ChatSession.entity";
 
 @Entity("users")
 export default class UserEntity extends BaseEntity {
@@ -33,4 +34,7 @@ export default class UserEntity extends BaseEntity {
     default: false,
   })
   isEmailVerified: boolean;
+
+  @OneToMany(() => ChatSessionEntity, session => session.user)
+  chatSessions: ChatSessionEntity[];
 }

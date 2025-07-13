@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
 import ChatMessageEntity from "./ChatMessage.entity";
 import BaseEntity from "./Base.entity";
+import UserEntity from "./User.entity";
 
 @Entity("chat_sessions")
 export default class ChatSessionEntity extends BaseEntity {
@@ -9,4 +10,7 @@ export default class ChatSessionEntity extends BaseEntity {
 
   @OneToMany(() => ChatMessageEntity, message => message.chatSession)
   messages: ChatMessageEntity[];
+
+  @ManyToOne(() => UserEntity, user => user.chatSessions, { nullable: false })
+  user: UserEntity;
 }

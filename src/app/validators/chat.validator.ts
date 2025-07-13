@@ -1,8 +1,10 @@
 import {
   ArrayNotEmpty,
   IsArray,
+  IsInt,
   IsNotEmpty,
   IsOptional,
+  Min,
 } from "class-validator";
 
 export class SendChatValidation {
@@ -25,3 +27,11 @@ export class SendChatValidation {
   @IsOptional()
   model?: string;
 }
+
+export class ChatValidationParamsId {
+  @IsInt()
+  @Min(1)
+  id: number;
+}
+
+
