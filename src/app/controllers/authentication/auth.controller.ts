@@ -40,7 +40,6 @@ export default class AuthController {
 
       await this.service.signup(
         name,
-
         username,
         email,
         password

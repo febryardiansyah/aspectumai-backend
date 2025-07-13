@@ -1,12 +1,52 @@
-import { Repository } from "typeorm";
+import { Database } from "@config/database";
+import ChatMessageEntity from "@entities/ChatMessage.entity";
+import ChatSessionEntity from "@entities/ChatSession.entity";
+import { EntityManager, Repository } from "typeorm";
 
-export default class ChatRepo extends Repository<any> {
-  // Define chat-related methods here
-  // Example:
-  // async createChat(chat: any): Promise<any> {
-  //   return this.save(chat);
-  // }
-  // async getChats(): Promise<any[]> {
-  //   return this.find();
-  // }
+export default class ChatRepo extends Repository<ChatSessionEntity> {
+  constructor(manager?: EntityManager) {
+    super(
+      ChatSessionEntity,
+      manager || Database.getInstance().getDataSource().manager
+    );
+  }
+
+  async findSessionById(
+    manager: EntityManager,
+    id: number
+  ): Promise<ChatSessionEntity | null> {
+    return manager.findOne(ChatSessionEntity, {
+      where: { id },
+      relations: {
+        messages: true,
+      },
+    });
+  }
+
+  async createSession(
+    manager: EntityManager,
+    session: ChatSessionEntity
+  ): Promise<ChatSessionEntity> {
+    return manager.save<ChatSessionEntity>(session);
+  }
+
+  async updateSession(
+    manager: EntityManager,
+    session: ChatSessionEntity
+  ): Promise<void> {
+    await manager.update(
+      ChatSessionEntity,
+      { id: session.id },
+      {
+        name: session.name,
+      }
+    );
+  }
+
+  async saveChat(
+    manager: EntityManager,
+    message: ChatMessageEntity
+  ): Promise<void> {
+    manager.save<ChatMessageEntity>(message);
+  }
 }

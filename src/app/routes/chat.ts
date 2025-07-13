@@ -1,4 +1,6 @@
 import ChatController from "@app/controllers/chat/chat.controller";
+import { SendChatValidation } from "@app/validators/chat.validator";
+import { ValidationMiddleware } from "@global/middleware/validation.middleware";
 import { Router } from "express";
 
 export default class ChatRouter {
@@ -14,7 +16,11 @@ export default class ChatRouter {
   private initialize(): void {
     // Define your chat-related routes here
     // Example:
-    // this.router.get("/messages", this.getMessages);
-    this.router.post("/send", this.chatController.sendMessage);
+    this.router.post("/session/new", this.chatController.createChatSession);
+    this.router.post(
+      "/send",
+      ValidationMiddleware.validateBody(SendChatValidation),
+      this.chatController.sendMessage
+    );
   }
 }
