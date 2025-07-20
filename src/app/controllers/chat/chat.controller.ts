@@ -68,8 +68,7 @@ export default class ChatController {
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { sessionId, messages, model } = req.body;
-      const user = req["user"] as UserEntity
-      ;
+      const user = req["user"] as UserEntity;
       const body: TSendChatBody = {
         sessionId,
         messages,
@@ -95,9 +94,17 @@ export default class ChatController {
     res: Response,
     next: NextFunction
   ) => {
+    const { id } = req.params;
+    const { limit, page } = req.query;
+    const _limit = limit ? Number(limit) : 10;
+    const _page = page ? Number(page) : 1;
+
     try {
-      const { id } = req.params;
-      const messages = await this.service.getSessionMessages(Number(id));
+      const messages = await this.service.getSessionMessages(
+        Number(id),
+        _limit,
+        _page
+      );
 
       return HttpResponse.success(
         res,

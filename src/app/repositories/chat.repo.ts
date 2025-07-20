@@ -1,6 +1,7 @@
 import { Database } from "@config/database";
 import ChatMessageEntity from "@entities/ChatMessage.entity";
 import ChatSessionEntity from "@entities/ChatSession.entity";
+import PaginationUtils from "@utilities/pagination";
 import { EntityManager, Repository } from "typeorm";
 
 export default class ChatRepo extends Repository<ChatSessionEntity> {
@@ -59,9 +60,16 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
 
   async getSessionMessagesById(
     manager: EntityManager,
-    sessionId: number
-  ): Promise<ChatMessageEntity[]> {
-    return manager.find(ChatMessageEntity, {
+    sessionId: number,
+    limit: number,
+    page: number
+  ) : Promise<[ChatMessageEntity[], number]>{
+    return manager.findAndCount(ChatMessageEntity, {
+      relations: {
+        chatSession: true,
+      },
+      skip: PaginationUtils.calculateOffset(limit, page),
+      take: limit,
       where: { chatSession: { id: sessionId } },
       order: {
         created_at: "ASC",
