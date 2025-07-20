@@ -46,7 +46,11 @@ export default class ChatController {
   getChatSessions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req["user"] as UserEntity;
-      const sessions = await this.service.getChatSessions(user.id);
+      const { limit, page } = req.query;
+      const _limit = limit ? Number(limit) : 10;
+      const _page = page ? Number(page) : 1;
+      
+      const sessions = await this.service.getChatSessions(user.id, _limit, _page);
 
       return HttpResponse.success(
         res,

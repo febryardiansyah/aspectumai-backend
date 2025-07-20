@@ -19,8 +19,18 @@ export default class ChatService {
     await this.chatRepo.createSession(chatSession);
   }
 
-  async getChatSessions(userId: number): Promise<ChatSessionEntity[]> {
-    return this.chatRepo.getAllSessions(userId);
+  async getChatSessions(
+    userId: number,
+    limit: number,
+    page: number
+  ): Promise<PaginationResult<ChatSessionEntity>> {
+    const sessions = await this.chatRepo.getAllSessions(userId, limit, page);
+    return {
+      current_page: page,
+      total_page: Math.ceil(sessions[1] / limit),
+      total_records: sessions[1],
+      records: sessions[0]
+    };
   }
 
   async sendMessage(

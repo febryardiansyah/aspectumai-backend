@@ -47,11 +47,15 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
 
   async getAllSessions(
     userId: number,
+    limit: number,
+    page: number,
     manager?: EntityManager
-  ): Promise<ChatSessionEntity[]> {
+  ): Promise<[ChatSessionEntity[], number]> {
     const entityManager = manager || this.manager;
-    return entityManager.find(ChatSessionEntity, {
+    return entityManager.findAndCount(ChatSessionEntity, {
       where: { user: { id: userId } },
+      skip: PaginationUtils.calculateOffset(limit, page),
+      take: limit,
       order: {
         created_at: "DESC",
       },
@@ -72,7 +76,7 @@ export default class ChatRepo extends Repository<ChatSessionEntity> {
       take: limit,
       where: { chatSession: { id: sessionId } },
       order: {
-        created_at: "ASC",
+        created_at: "DESC",
       },
     });
   }
