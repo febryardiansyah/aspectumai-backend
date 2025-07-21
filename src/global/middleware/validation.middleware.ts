@@ -1,6 +1,6 @@
 import { ErrorHandler, HttpResponse } from "@config/http";
 import { HTTPCode } from "@global/constant/http.constant";
-import { plainToClass } from "class-transformer";
+import { plainToClass, plainToInstance } from "class-transformer";
 import { ValidationError, ValidatorOptions, validate } from "class-validator";
 import { NextFunction, Request, Response } from "express";
 import {
@@ -37,6 +37,34 @@ export class ValidationMiddleware {
         ),
       };
     });
+  }
+
+  static validateParamsId<T extends object>(
+    type: TClassConstructor<T>,
+    validatorOptions?: ValidatorOptions
+  ) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      const validationObj = plainToInstance(type, {
+        id: parseInt(req.params.id, 10),
+      });
+      const errors: ValidationError[] = await validate(
+        validationObj,
+        validatorOptions
+      );
+      console.log("Validation Errors:", validationObj);
+
+      if (errors.length > 0) {
+        HttpResponse.error(
+          res,
+          "Validation Error",
+          ValidationMiddleware.formatBodyErrors(errors),
+          HTTPCode.ValidationError
+        );
+      } else {
+        req.params = validationObj as any;
+        next();
+      }
+    };
   }
 
   static validateQuery<T>(

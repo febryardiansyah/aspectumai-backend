@@ -197,12 +197,6 @@ export default class AuthService {
     }
   }
 
-  generateToken(email: string) {
-    const token = jwt.sign({ email: email }, JWT_SECRET);
-
-    return token;
-  }
-
   async verifyOTP(email: string, otp: string): Promise<void> {
     const queryRunner = this.dataSource.createQueryRunner();
 

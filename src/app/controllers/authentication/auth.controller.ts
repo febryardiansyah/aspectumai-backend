@@ -1,5 +1,6 @@
 import AuthService from "@app/services/authentication/auth.service";
 import { ErrorHandler, HttpResponse } from "@config/http";
+import TokenUtils from "@utilities/token";
 import { NextFunction, Request, Response } from "express";
 
 export default class AuthController {
@@ -38,13 +39,7 @@ export default class AuthController {
     try {
       const { name, username, email, password } = req.body;
 
-      await this.service.signup(
-        name,
-
-        username,
-        email,
-        password
-      );
+      await this.service.signup(name, username, email, password);
 
       return HttpResponse.success(
         res,
@@ -68,7 +63,7 @@ export default class AuthController {
 
       const user = await this.service.signin(email, password);
 
-      const token = await this.service.generateToken(email);
+      const token = TokenUtils.generateToken(email);
 
       user.password = undefined;
 

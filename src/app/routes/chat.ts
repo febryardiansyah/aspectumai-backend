@@ -1,4 +1,10 @@
 import ChatController from "@app/controllers/chat/chat.controller";
+import {
+  ChatValidationParamsId,
+  SendChatValidation,
+} from "@app/validators/chat.validator";
+import { AuthMiddleware } from "@global/middleware/auth.middleware";
+import { ValidationMiddleware } from "@global/middleware/validation.middleware";
 import { Router } from "express";
 
 export default class ChatRouter {
@@ -12,9 +18,36 @@ export default class ChatRouter {
   }
 
   private initialize(): void {
-    // Define your chat-related routes here
-    // Example:
-    // this.router.get("/messages", this.getMessages);
-    this.router.post("/send", this.chatController.sendMessage);
+    /// sessions
+    this.router.post(
+      "/session/new",
+      AuthMiddleware.tokenRequired,
+      this.chatController.createChatSession
+    );
+    this.router.get(
+      "/session/all",
+      AuthMiddleware.tokenRequired,
+      this.chatController.getChatSessions
+    );
+    this.router.get(
+      "/session/:id/messages",
+      AuthMiddleware.tokenRequired,
+      ValidationMiddleware.validateParamsId(ChatValidationParamsId),
+      this.chatController.getSessionMessages
+    );
+    this.router.delete(
+      "/session/:id",
+      AuthMiddleware.tokenRequired,
+      ValidationMiddleware.validateParamsId(ChatValidationParamsId),
+      this.chatController.removeSession
+    );
+
+    /// chat
+    this.router.post(
+      "/message/send",
+      AuthMiddleware.tokenRequired,
+      ValidationMiddleware.validateBody(SendChatValidation),
+      this.chatController.sendMessage
+    );
   }
 }
