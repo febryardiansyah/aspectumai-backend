@@ -13,12 +13,14 @@ import UserEntity from "@entities/User.entity";
 import AuthRepository from "@app/repositories/auth.repo";
 import { JWT_SECRET } from "@global/constant/database.constant";
 import { TUserEmailVerificationType } from "@app/types/user-email-verification";
+import EmailService from "@app/services/email/email.service";
 
 export default class AuthService {
   constructor(
     private readonly dataSource: DataSource = AppDataSource,
     private readonly userEmailVerificationRepo: UserEmailVerificationRepository = new UserEmailVerificationRepository(),
-    private readonly authRepository: AuthRepository = new AuthRepository()
+    private readonly authRepository: AuthRepository = new AuthRepository(),
+    private readonly emailService: EmailService = new EmailService()
   ) {}
 
   // verifyEmail is a method that sends an OTP to the user's email.
@@ -30,6 +32,8 @@ export default class AuthService {
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    let otpCode: string;
 
     try {
       await this.dataSource.manager.transaction(async manager => {
@@ -46,6 +50,7 @@ export default class AuthService {
           );
 
         const otp = GeneratorUtils.generateOTP();
+        otpCode = otp;
         const now = moment();
 
         this.validateOtpAttemps(verificationExist, now);
@@ -67,6 +72,9 @@ export default class AuthService {
       });
 
       await queryRunner.commitTransaction();
+      
+      // Send OTP via email after successful database transaction
+      await this.emailService.sendOTPEmail(email, otpCode, type);
     } catch (error) {
       await queryRunner.rollbackTransaction();
 
