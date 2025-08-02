@@ -24,7 +24,7 @@ export default class AuthRouter {
 
   private initialize(): void {
     this.router.post(
-      "/sign-up/email-verification",
+      "/email-verification",
       ValidationMiddleware.validateBody(AuthSignupEmailVerification),
       this.authController.emailVerification
     );
