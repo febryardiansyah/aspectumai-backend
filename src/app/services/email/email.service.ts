@@ -1,5 +1,6 @@
 import * as nodemailer from 'nodemailer';
 import { ErrorHandler } from '@config/http';
+import env from '@config/env';
 
 export interface EmailOptions {
   to: string;
@@ -15,8 +16,8 @@ export default class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD, // Use App Password, not regular password
+        user: env.GMAIL.USER,
+        pass: env.GMAIL.APP_PASSWORD, // Use App Password, not regular password
       },
     });
   }
@@ -24,7 +25,7 @@ export default class EmailService {
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
       const mailOptions = {
-        from: process.env.GMAIL_USER,
+        from: env.GMAIL.USER,
         to: options.to,
         subject: options.subject,
         text: options.text,

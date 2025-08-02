@@ -20,6 +20,10 @@ const env = {
   },
   LOG_FILE: process.env.LOG_FILE,
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  GMAIL: {
+    USER: process.env.GMAIL_USER,
+    APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+  },
 };
 
 export default env;
