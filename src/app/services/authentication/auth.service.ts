@@ -28,60 +28,45 @@ export default class AuthService {
     email: string,
     type: TUserEmailVerificationType
   ): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     let otpCode: string;
 
-    try {
-      await this.dataSource.manager.transaction(async manager => {
-        if (type === "RESET_PASSWORD") {
-          const user = await this.authRepository.findByEmail(manager, email);
-          if (!user) throw "User not found!";
-        }
+    await this.dataSource.manager.transaction(async manager => {
+      if (type === "RESET_PASSWORD") {
+        const user = await this.authRepository.findByEmail(manager, email);
+        if (!user) throw "User not found!";
+      }
 
-        const verificationExist =
-          await this.userEmailVerificationRepo.findByEmailAndType(
-            manager,
-            email,
-            type
-          );
+      const verificationExist =
+        await this.userEmailVerificationRepo.findByEmailAndType(
+          manager,
+          email,
+          type
+        );
 
-        const otp = GeneratorUtils.generateOTP();
-        otpCode = otp;
-        const now = moment();
+      const otp = GeneratorUtils.generateOTP();
+      otpCode = otp;
+      const now = moment();
 
-        this.validateOtpAttemps(verificationExist, now);
+      this.validateOtpAttemps(verificationExist, now);
 
-        if (verificationExist)
-          await this.userEmailVerificationRepo.updateOtp(
-            manager,
-            email,
-            verificationExist.type,
-            otp
-          );
-        else
-          await this.userEmailVerificationRepo.createOtp(
-            manager,
-            email,
-            type,
-            otp
-          );
-      });
+      if (verificationExist)
+        await this.userEmailVerificationRepo.updateOtp(
+          manager,
+          email,
+          verificationExist.type,
+          otp
+        );
+      else
+        await this.userEmailVerificationRepo.createOtp(
+          manager,
+          email,
+          type,
+          otp
+        );
+    });
 
-      await queryRunner.commitTransaction();
-      
-      // Send OTP via email after successful database transaction
-      await this.emailService.sendOTPEmail(email, otpCode, type);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    // Send OTP via email after successful database transaction
+    await this.emailService.sendOTPEmail(email, otpCode, type);
   }
 
   private calculateDelay(attemptCount: number): number {
@@ -130,114 +115,68 @@ export default class AuthService {
     email: string,
     password: string
   ): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    await this.dataSource.manager.transaction(async manager => {
+      const userByEmail = await this.authRepository.findByEmail(
+        manager,
+        email
+      );
+      if (userByEmail) throw "User already exist!";
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+      const userByUsername = await this.authRepository.findByUsername(
+        manager,
+        username
+      );
+      if (userByUsername) throw "Username already exist!";
 
-    try {
-      await this.dataSource.manager.transaction(async manager => {
-        const userByEmail = await this.authRepository.findByEmail(
-          manager,
-          email
-        );
-        if (userByEmail) throw "User already exist!";
+      const user = new UserEntity();
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-        const userByUsername = await this.authRepository.findByUsername(
-          manager,
-          username
-        );
-        if (userByUsername) throw "Username already exist!";
+      user.name = name;
+      user.username = username;
+      user.email = email;
+      user.password = hashedPassword;
 
-        const user = new UserEntity();
-        const hashedPassword = await bcrypt.hash(password, 10);
+      await this.authRepository.createUser(manager, user);
+    });
 
-        user.name = name;
-        user.username = username;
-        user.email = email;
-        user.password = hashedPassword;
-
-        await this.authRepository.createUser(manager, user);
-
-        await this.verifyEmail(email, "SIGNUP");
-      });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    // Send verification email after user creation
+    await this.verifyEmail(email, "SIGNUP");
   }
 
   async signin(email: string, password: string): Promise<UserEntity> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    return await this.dataSource.manager.transaction(async manager => {
+      const user = await this.authRepository.findByEmail(manager, email);
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+      if (!user) throw "User not found!";
 
-    try {
-      const user = await this.dataSource.manager.transaction(async manager => {
-        const user = await this.authRepository.findByEmail(manager, email);
+      const isPasswordMatch = await bcrypt.compare(password, user.password);
 
-        if (!user) throw "User not found!";
+      if (!isPasswordMatch) throw "Invalid password!";
 
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordMatch) throw "Invalid password!";
-
-        if (!user.isEmailVerified) throw "Email is not verified!";
-
-        return user;
-      });
-
-      await queryRunner.commitTransaction();
+      if (!user.isEmailVerified) throw "Email is not verified!";
 
       return user;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   async verifyOTP(email: string, otp: string): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    await this.dataSource.manager.transaction(async manager => {
+      const user = await this.authRepository.findByEmail(manager, email);
+      if (user.isEmailVerified) throw "Email is already verified!";
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+      const verificationExist =
+        await this.userEmailVerificationRepo.findByEmailAndType(
+          manager,
+          email,
+          "SIGNUP"
+        );
 
-    try {
-      await this.dataSource.manager.transaction(async manager => {
-        const user = await this.authRepository.findByEmail(manager, email);
-        if (user.isEmailVerified) throw "Email is already verified!";
+      if (!verificationExist) throw "OTP not found!";
 
-        const verificationExist =
-          await this.userEmailVerificationRepo.findByEmailAndType(
-            manager,
-            email,
-            "SIGNUP"
-          );
+      if (verificationExist.otp !== otp) throw "Invalid OTP!";
 
-        if (!verificationExist) throw "OTP not found!";
-
-        if (verificationExist.otp !== otp) throw "Invalid OTP!";
-
-        await this.authRepository.updateUserVerification(manager, email);
-      });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+      await this.authRepository.updateUserVerification(manager, email);
+    });
   }
 
   async resetPassword(
@@ -245,39 +184,24 @@ export default class AuthService {
     otp: string,
     password: string
   ): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    await this.dataSource.manager.transaction(async manager => {
+      const user = await this.authRepository.findByEmail(manager, email);
+      if (!user) throw "User not found!";
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+      const verificationExist =
+        await this.userEmailVerificationRepo.findByEmailAndType(
+          manager,
+          email,
+          "RESET_PASSWORD"
+        );
 
-    try {
-      await this.dataSource.manager.transaction(async manager => {
-        const user = await this.authRepository.findByEmail(manager, email);
-        if (!user) throw "User not found!";
+      if (!verificationExist) throw "OTP not found!";
 
-        const verificationExist =
-          await this.userEmailVerificationRepo.findByEmailAndType(
-            manager,
-            email,
-            "RESET_PASSWORD"
-          );
+      if (verificationExist.otp !== otp) throw "Invalid OTP!";
 
-        if (!verificationExist) throw "OTP not found!";
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-        if (verificationExist.otp !== otp) throw "Invalid OTP!";
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        await this.authRepository.resetPassword(manager, email, hashedPassword);
-      });
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+      await this.authRepository.resetPassword(manager, email, hashedPassword);
+    });
   }
 }
